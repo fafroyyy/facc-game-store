@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/facc-logo.png') }}">
+    <title>Kelola Pengajuan - Admin FACC GAME STORE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        facc: { DEFAULT: '#00008B', dark: '#000055', light: '#1A1AA6' }
+                    },
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    {{-- NAVBAR --}}
+    <nav class="bg-white border-b border-gray-200 p-4 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto flex justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <a href="{{ route('admin.dashboard') }}" class="flex-shrink-0 flex items-center gap-2">
+                    <img src="{{ asset('images/facc-logo.png') }}" alt="Logo FACC Game Store" class="w-10 h-10 md:w-12 md:h-12 object-contain rounded-lg">
+                    <div class="leading-tight hidden md:block">
+                        <div class="font-black text-gray-900 text-sm tracking-widest uppercase">FACC</div>
+                        <div class="font-semibold text-gray-500 text-xs tracking-widest uppercase">Admin Panel</div>
+                    </div>
+                </a>
+            </div>
+            <div class="flex items-center space-x-3 md:space-x-4 flex-shrink-0">
+                @include('partials.navbar-profile')
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-10">
+        <div class="mb-6">
+            <a href="{{ route('admin.dashboard') }}" class="inline-block px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition text-sm">Kembali</a>
+        </div>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 uppercase tracking-tight">Kelola Pengajuan Akun</h1>
+                <p class="text-gray-500 mt-1 font-medium">Tinjau, terima, tolak, dan selesaikan transaksi pengajuan akun dari customer.</p>
+            </div>
+        </div>
+
+
+
+        <div class="bg-white border border-gray-200 rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500">
+                            <th class="p-5 font-bold">Customer / Game</th>
+                            <th class="p-5 font-bold">Harga</th>
+                            <th class="p-5 font-bold">WhatsApp</th>
+                            <th class="p-5 font-bold">Status</th>
+                            <th class="p-5 font-bold text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        @forelse($submissions as $submission)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-5">
+                                    <div class="font-bold text-gray-900 text-base mb-1">{{ $submission->seller_name }}</div>
+                                    <div class="text-xs text-gray-500 font-bold uppercase tracking-widest">{{ $submission->game_category }}</div>
+                                </td>
+                                <td class="p-5 font-black text-green-600 text-base">Rp {{ number_format($submission->price, 0, ',', '.') }}</td>
+                                <td class="p-5 text-gray-700 font-medium">{{ $submission->whatsapp }}</td>
+                                <td class="p-5">
+                                    <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full border 
+                                        @if($submission->status === 'accepted' || $submission->status === 'completed') bg-green-50 border-green-200 text-green-700
+                                        @elseif($submission->status === 'rejected') bg-red-50 border-red-200 text-red-700
+                                        @elseif($submission->status === 'payment_info_submitted') bg-blue-50 border-blue-200 text-blue-700
+                                        @else bg-yellow-50 border-yellow-200 text-yellow-700 @endif">
+                                        {{ $submission->status_label }}
+                                    </span>
+                                </td>
+                                <td class="p-5 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a href="{{ route('admin.submissions.show', $submission) }}" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg text-xs font-bold transition">Detail</a>
+                                        
+                                        <form action="{{ route('admin.submissions.destroy', $submission) }}" method="POST" class="inline swal-delete-form" data-message="Yakin ingin menghapus pengajuan ini secara permanen? Tindakan ini tidak bisa dibatalkan.">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-lg text-xs font-bold transition">Hapus</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-gray-500 font-medium">Belum ada pengajuan penjualan akun.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            
+            @if(method_exists($submissions, 'links'))
+            <div class="p-5 border-t border-gray-100 bg-gray-50">
+                {{ $submissions->links() }}
+            </div>
+            @endif
+        </div>
+    </main>
+
+    @include('partials.footer')
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    document.querySelectorAll('.swal-delete-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const msg = form.dataset.message || 'Yakin ingin menghapus?';
+            Swal.fire({
+                title: 'Konfirmasi Hapus',
+                text: msg,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>
